@@ -1,0 +1,17 @@
+[
+{
+  "modid": "neptune",
+  "name": "Neptune Client",
+  "description": "Clean-room free look, smooth zoom and hitbox rendering.",
+  "version": "${version}",
+  "mcversion": "1.8.9",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["adama"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "parent": "",
+  "useDependencyInformation": false
+}
+]
