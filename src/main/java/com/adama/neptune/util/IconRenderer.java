@@ -11,6 +11,12 @@ public final class IconRenderer {
     public static final int SEARCH = 5;
     public static final int CHEVRON_DOWN = 6;
     public static final int CHEVRON_RIGHT = 7;
+    public static final int GRID = 8;
+    public static final int LIST = 9;
+    public static final int SETTINGS = 10;
+    public static final int KEYBOARD = 11;
+    public static final int CLOSE = 12;
+    public static final int DOT = 13;
 
     private IconRenderer() {
     }
@@ -65,6 +71,38 @@ public final class IconRenderer {
                 bar(x + size / 4, y + size / 4, size / 2, unit, color);
                 bar(x + size / 4, y + size * 3 / 4 - unit, size / 2, unit, color);
                 bar(x + size * 3 / 4 - unit, y + size / 4, unit, size / 2, color);
+                break;
+            case GRID:
+                bar(x, y, size / 2 - 1, size / 2 - 1, color);
+                bar(x + size / 2 + 1, y, size / 2 - 1, size / 2 - 1, color);
+                bar(x, y + size / 2 + 1, size / 2 - 1, size / 2 - 1, color);
+                bar(x + size / 2 + 1, y + size / 2 + 1, size / 2 - 1, size / 2 - 1, color);
+                break;
+            case LIST:
+                bar(x, y + 1, size, unit, color);
+                bar(x, y + size / 2, size, unit, color);
+                bar(x, y + size - 2 * unit, size, unit, color);
+                break;
+            case SETTINGS:
+                bar(x, y + 1, size, unit, color);
+                bar(x + size / 2 - 2, y - 1, 2, 3, color);
+                bar(x, y + size / 2, size, unit, color);
+                bar(x + size / 3, y + size / 2 - 1, 2, 3, color);
+                bar(x, y + size - 2 * unit, size, unit, color);
+                break;
+            case KEYBOARD:
+                bar(x, y, size, size, color);
+                bar(x + 2, y + 2, size - 4, size - 4, 0xFF000000);
+                bar(x + 2, y + size - 5, size - 4, 2, color);
+                break;
+            case CLOSE:
+                for (int i = 0; i < size; i++) {
+                    bar(x + i, y + i, unit, unit, color);
+                    bar(x + size - i, y + i, unit, unit, color);
+                }
+                break;
+            case DOT:
+                bar(x + size / 2 - 1, y + size / 2 - 1, 2, 2, color);
                 break;
             default:
                 bar(x, y, size, size, color);

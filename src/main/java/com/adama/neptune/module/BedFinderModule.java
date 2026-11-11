@@ -4,15 +4,24 @@ import com.adama.neptune.config.NeptuneConfig;
 import com.adama.neptune.gui.setting.BoolSetting;
 import com.adama.neptune.gui.setting.Setting;
 import com.adama.neptune.gui.setting.SliderSetting;
+import com.adama.neptune.util.GlUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -20,22 +29,50 @@ import java.util.Map;
 
 public class BedFinderModule extends HudModule {
     private final List<Setting> settings;
-    private final List<String> cached = new ArrayList<>();
+    private final List<Bed> beds = new ArrayList<>();
     private long lastScan;
+
+    private static final class Count {
+        final ItemStack stack;
+        final int amount;
+
+        Count(ItemStack stack, int amount) {
+            this.stack = stack;
+            this.amount = amount;
+        }
+    }
+
+    private static final class Bed {
+        final BlockPos pos;
+        final double distance;
+        final String direction;
+        final List<Count> counts;
+        final String summary;
+
+        Bed(BlockPos pos, double distance, String direction, List<Count> counts, String summary) {
+            this.pos = pos;
+            this.distance = distance;
+            this.direction = direction;
+            this.counts = counts;
+            this.summary = summary;
+        }
+    }
 
     public BedFinderModule(NeptuneConfig config) {
         super(config);
         this.settings = Arrays.asList(
                 new BoolSetting("Enabled", this::isEnabled, this::setEnabled),
-                new BoolSetting("Show blocks", () -> config.toggle("bedfinder.blocks", true),
-                        value -> config.setToggle("bedfinder.blocks", value)),
+                new BoolSetting("World overlay", () -> config.toggle("bedfinder.overlay", true),
+                        value -> config.setToggle("bedfinder.overlay", value)),
+                new BoolSetting("Block icons", () -> config.toggle("bedfinder.icons", true),
+                        value -> config.setToggle("bedfinder.icons", value)),
                 new SliderSetting("X", 0.0D, 1000.0D, 1.0D, 0,
                         () -> config.posX("bedfinder", 4),
                         value -> config.setPos("bedfinder", (int) Math.round(value), config.posY("bedfinder", 250))),
                 new SliderSetting("Y", 0.0D, 600.0D, 1.0D, 0,
                         () -> config.posY("bedfinder", 250),
                         value -> config.setPos("bedfinder", config.posX("bedfinder", 4), (int) Math.round(value))),
-                new SliderSetting("Radius", 4.0D, 24.0D, 1.0D, 0,
+                new SliderSetting("Radius", 4.0D, 32.0D, 1.0D, 0,
                         () -> config.number("bedfinder.radius", 12.0D),
                         value -> config.setNumber("bedfinder.radius", value))
         );
@@ -67,92 +104,90 @@ public class BedFinderModule extends HudModule {
     }
 
     @Override
-    public void render() {
-        Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null || mc.theWorld == null) return;
+    public void onClientTick() {
+        if (!isEnabled()) return;
         long now = System.currentTimeMillis();
         if (now - lastScan > 500L) {
-            scan(mc);
+            scan();
             lastScan = now;
-        }
-        int x = config.posX("bedfinder", 4);
-        int y = config.posY("bedfinder", 250);
-        for (String line : cached) {
-            mc.fontRendererObj.drawStringWithShadow(line, x, y, 0xFFE6EDF3);
-            y += 10;
         }
     }
 
-    private void scan(Minecraft mc) {
-        cached.clear();
+    private void scan() {
+        beds.clear();
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.theWorld == null) return;
         int radius = (int) config.number("bedfinder.radius", 12.0D);
         BlockPos center = new BlockPos((int) Math.floor(mc.thePlayer.posX),
                 (int) Math.floor(mc.thePlayer.posY), (int) Math.floor(mc.thePlayer.posZ));
-        List<BlockPos> beds = new ArrayList<>();
+        List<BlockPos> found = new ArrayList<>();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dy = -radius; dy <= radius; dy++) {
                 for (int dz = -radius; dz <= radius; dz++) {
-                    int x = center.getX() + dx;
                     int y = center.getY() + dy;
-                    int z = center.getZ() + dz;
                     if (y < 0 || y > 255) continue;
-                    BlockPos pos = new BlockPos(x, y, z);
+                    BlockPos pos = new BlockPos(center.getX() + dx, y, center.getZ() + dz);
                     if (mc.theWorld.getBlockState(pos).getBlock() instanceof BlockBed) {
-                        beds.add(pos);
+                        found.add(pos);
                     }
                 }
             }
         }
-        if (beds.isEmpty()) {
-            cached.add("No beds within " + radius + "m");
-            return;
-        }
-        beds.sort(Comparator.comparingDouble(pos -> distanceSq(pos, center)));
-        List<BlockPos> shownBeds = new ArrayList<>();
-        for (BlockPos bed : beds) {
-            if (shownBeds.size() >= 4) break;
+        found.sort(Comparator.comparingDouble(pos -> distanceSq(pos, center)));
+        List<BlockPos> shown = new ArrayList<>();
+        for (BlockPos pos : found) {
+            if (shown.size() >= 8) break;
             boolean duplicate = false;
-            for (BlockPos shownBed : shownBeds) {
-                if (Math.abs(shownBed.getX() - bed.getX()) <= 1
-                        && Math.abs(shownBed.getY() - bed.getY()) <= 1
-                        && Math.abs(shownBed.getZ() - bed.getZ()) <= 1) {
+            for (BlockPos other : shown) {
+                if (Math.abs(other.getX() - pos.getX()) <= 1 && Math.abs(other.getY() - pos.getY()) <= 1
+                        && Math.abs(other.getZ() - pos.getZ()) <= 1) {
                     duplicate = true;
                     break;
                 }
             }
             if (duplicate) continue;
-            shownBeds.add(bed);
-            int dx = bed.getX() - center.getX();
-            int dz = bed.getZ() - center.getZ();
+            shown.add(pos);
+            int dx = pos.getX() - center.getX();
+            int dz = pos.getZ() - center.getZ();
             double distance = Math.sqrt(dx * dx + dz * dz);
-            String line = "Bed " + Math.round(distance) + "m " + direction(dx, dz);
-            if (config.toggle("bedfinder.blocks", true)) {
-                line += "  " + surrounding(mc, bed);
-            }
-            cached.add(line);
+            List<Count> counts = surrounding(mc, pos);
+            beds.add(new Bed(pos, distance, direction(dx, dz), counts, summary(counts)));
         }
     }
 
-    private String surrounding(Minecraft mc, BlockPos bed) {
-        Map<String, Integer> counts = new HashMap<>();
+    private List<Count> surrounding(Minecraft mc, BlockPos bed) {
+        Map<String, Count> counts = new HashMap<>();
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     BlockPos pos = bed.add(dx, dy, dz);
-                    Block block = mc.theWorld.getBlockState(pos).getBlock();
+                    IBlockState state = mc.theWorld.getBlockState(pos);
+                    Block block = state.getBlock();
                     if (block instanceof BlockBed) continue;
                     if (block.getMaterial().isReplaceable()) continue;
-                    String name = new ItemStack(block).getDisplayName();
-                    counts.put(name, counts.getOrDefault(name, 0) + 1);
+                    int meta = block.getMetaFromState(state);
+                    ItemStack stack = new ItemStack(block, 1, meta);
+                    String name = stack.getDisplayName();
+                    String key = name + "#" + meta;
+                    Count existing = counts.get(key);
+                    if (existing == null) {
+                        counts.put(key, new Count(stack, 1));
+                    } else {
+                        counts.put(key, new Count(existing.stack, existing.amount + 1));
+                    }
                 }
             }
         }
-        List<Map.Entry<String, Integer>> entries = new ArrayList<>(counts.entrySet());
-        entries.sort((a, b) -> Integer.compare(b.getValue(), a.getValue()));
+        List<Count> list = new ArrayList<>(counts.values());
+        list.sort((a, b) -> Integer.compare(b.amount, a.amount));
+        return list;
+    }
+
+    private static String summary(List<Count> counts) {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < entries.size() && i < 3; i++) {
-            if (i > 0) builder.append(", ");
-            builder.append(entries.get(i).getKey()).append("x").append(entries.get(i).getValue());
+        for (int i = 0; i < counts.size() && i < 3; i++) {
+            if (i > 0) builder.append("  ");
+            builder.append(counts.get(i).stack.getDisplayName()).append(" x").append(counts.get(i).amount);
         }
         return builder.length() == 0 ? "bare" : builder.toString();
     }
@@ -178,15 +213,127 @@ public class BedFinderModule extends HudModule {
     }
 
     @Override
-    public int width() {
-        int width = 0;
+    public void render() {
         Minecraft mc = Minecraft.getMinecraft();
-        for (String line : cached) width = Math.max(width, mc.fontRendererObj.getStringWidth(line));
+        int x = config.posX("bedfinder", 4);
+        int y = config.posY("bedfinder", 250);
+        boolean icons = config.toggle("bedfinder.icons", true);
+        if (beds.isEmpty()) {
+            mc.fontRendererObj.drawStringWithShadow("No beds nearby", x, y, 0xFF9AA6B8);
+            return;
+        }
+        for (Bed bed : beds) {
+            String text = "Bed " + Math.round(bed.distance) + "m " + bed.direction + "  " + bed.summary;
+            mc.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFE6EDF3);
+            y += 10;
+            if (icons && !bed.counts.isEmpty()) {
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                GlStateManager.enableRescaleNormal();
+                RenderHelper.enableGUIStandardItemLighting();
+                int iconX = x;
+                for (int i = 0; i < bed.counts.size() && i < 4; i++) {
+                    Count count = bed.counts.get(i);
+                    mc.getRenderItem().renderItemAndEffectIntoGUI(count.stack, iconX, y);
+                    mc.fontRendererObj.drawStringWithShadow("x" + count.amount, iconX + 17, y + 5, 0xFFCFE3FF);
+                    iconX += 40;
+                }
+                RenderHelper.disableStandardItemLighting();
+                GlStateManager.disableRescaleNormal();
+                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                y += 18;
+            }
+        }
+    }
+
+    @Override
+    public void onRenderWorld(RenderWorldLastEvent event) {
+        if (!isEnabled() || !config.toggle("bedfinder.overlay", true)) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.theWorld == null) return;
+        double viewerX = mc.getRenderManager().viewerPosX;
+        double viewerY = mc.getRenderManager().viewerPosY;
+        double viewerZ = mc.getRenderManager().viewerPosZ;
+
+        boolean depthWas = GlUtil.get(GL11.GL_DEPTH_TEST);
+        boolean blendWas = GlUtil.get(GL11.GL_BLEND);
+        boolean lightingWas = GlUtil.get(GL11.GL_LIGHTING);
+        boolean textureWas = GlUtil.get(GL11.GL_TEXTURE_2D);
+        GL11.glLineWidth(1.5F);
+        GlUtil.set(GL11.GL_DEPTH_TEST, true);
+        GlUtil.set(GL11.GL_BLEND, true);
+        GlUtil.set(GL11.GL_TEXTURE_2D, false);
+        GlUtil.set(GL11.GL_LIGHTING, false);
+        GlStateManager.depthMask(false);
+
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer renderer = tessellator.getWorldRenderer();
+        renderer.begin(3, DefaultVertexFormats.POSITION_COLOR);
+        for (Bed bed : beds) {
+            AxisAlignedBB box = new AxisAlignedBB(bed.pos, bed.pos.add(1, 1, 1)).expand(0.01D, 0.01D, 0.01D)
+                    .offset(-viewerX, -viewerY, -viewerZ);
+            edges(renderer, box, 0.35F, 0.75F, 1.0F, 0.9F);
+        }
+        tessellator.draw();
+
+        GlUtil.set(GL11.GL_DEPTH_TEST, depthWas);
+        GlUtil.set(GL11.GL_BLEND, blendWas);
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWas);
+        GlUtil.set(GL11.GL_LIGHTING, lightingWas);
+        GlStateManager.depthMask(true);
+        GL11.glLineWidth(1.0F);
+
+        GlUtil.set(GL11.GL_TEXTURE_2D, true);
+        for (Bed bed : beds) {
+            String text = "Bed " + Math.round(bed.distance) + "m " + bed.direction;
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(bed.pos.getX() + 0.5D - viewerX, bed.pos.getY() + 1.4D - viewerY,
+                    bed.pos.getZ() + 0.5D - viewerZ);
+            GlStateManager.rotate(-mc.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
+            GlStateManager.rotate(mc.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
+            GlStateManager.scale(-0.025F, -0.025F, 0.025F);
+            mc.fontRendererObj.drawString(text, -mc.fontRendererObj.getStringWidth(text) / 2, 0, 0xFF8FD3FF);
+            GlStateManager.popMatrix();
+        }
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWas);
+    }
+
+    private void edges(WorldRenderer renderer, AxisAlignedBB box, float red, float green, float blue, float alpha) {
+        double x1 = box.minX, y1 = box.minY, z1 = box.minZ, x2 = box.maxX, y2 = box.maxY, z2 = box.maxZ;
+        edge(renderer, x1, y1, z1, x2, y1, z1, red, green, blue, alpha);
+        edge(renderer, x2, y1, z1, x2, y1, z2, red, green, blue, alpha);
+        edge(renderer, x2, y1, z2, x1, y1, z2, red, green, blue, alpha);
+        edge(renderer, x1, y1, z2, x1, y1, z1, red, green, blue, alpha);
+        edge(renderer, x1, y2, z1, x2, y2, z1, red, green, blue, alpha);
+        edge(renderer, x2, y2, z1, x2, y2, z2, red, green, blue, alpha);
+        edge(renderer, x2, y2, z2, x1, y2, z2, red, green, blue, alpha);
+        edge(renderer, x1, y2, z2, x1, y2, z1, red, green, blue, alpha);
+        edge(renderer, x1, y1, z1, x1, y2, z1, red, green, blue, alpha);
+        edge(renderer, x2, y1, z1, x2, y2, z1, red, green, blue, alpha);
+        edge(renderer, x2, y1, z2, x2, y2, z2, red, green, blue, alpha);
+        edge(renderer, x1, y1, z2, x1, y2, z2, red, green, blue, alpha);
+    }
+
+    private void edge(WorldRenderer renderer, double x1, double y1, double z1, double x2, double y2, double z2,
+                      float red, float green, float blue, float alpha) {
+        renderer.pos(x1, y1, z1).color(red, green, blue, alpha).endVertex();
+        renderer.pos(x2, y2, z2).color(red, green, blue, alpha).endVertex();
+    }
+
+    @Override
+    public int width() {
+        Minecraft mc = Minecraft.getMinecraft();
+        int width = 0;
+        for (Bed bed : beds) {
+            width = Math.max(width, mc.fontRendererObj.getStringWidth("Bed " + Math.round(bed.distance) + "m "
+                    + bed.direction + "  " + bed.summary));
+        }
         return width;
     }
 
     @Override
     public int height() {
-        return Math.max(10, cached.size() * 10);
+        boolean icons = config.toggle("bedfinder.icons", true);
+        int row = icons ? 28 : 10;
+        return Math.max(row, beds.size() * row);
     }
 }

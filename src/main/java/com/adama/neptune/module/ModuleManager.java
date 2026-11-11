@@ -5,6 +5,7 @@ import com.adama.neptune.gui.ClickGui;
 import com.adama.neptune.input.CapturingMouseHelper;
 import com.adama.neptune.util.KeyUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.input.Keyboard;
@@ -67,6 +68,7 @@ public class ModuleManager {
         modules.add(new DirectionHud(config));
         modules.add(new PotionHud(config));
         modules.add(new HealthBarModule(config));
+        modules.add(new EnemyHealthModule(config));
         modules.add(new BedFinderModule(config));
         modules.add(new CoordsModule(config));
         modules.add(keystrokes);
@@ -212,7 +214,7 @@ public class ModuleManager {
 
         boolean gui = isDown(config.guiKey);
         if (gui && !guiDown) {
-            if (mc.currentScreen == null) {
+            if (mc.currentScreen == null || mc.currentScreen instanceof GuiMainMenu) {
                 mc.displayGuiScreen(new ClickGui(config, this));
             } else if (mc.currentScreen instanceof ClickGui) {
                 mc.displayGuiScreen(null);

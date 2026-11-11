@@ -32,6 +32,9 @@ class CrosshairModule extends BKModule {
         super(config);
         this.settings = Arrays.asList(
                 new BoolSetting("Enabled", this::isEnabled, this::setEnabled),
+                new SliderSetting("Style", 0.0D, 5.0D, 1.0D, 0,
+                        () -> config.number("crosshair.style", 0.0D),
+                        value -> config.setNumber("crosshair.style", value)),
                 new SliderSetting("Size", 2.0D, 20.0D, 1.0D, 0,
                         () -> config.number("crosshair.size", 7.0D),
                         value -> config.setNumber("crosshair.size", value)),
@@ -91,16 +94,70 @@ class CrosshairModule extends BKModule {
         ScaledResolution resolution = new ScaledResolution(mc);
         int cx = resolution.getScaledWidth() / 2;
         int cy = resolution.getScaledHeight() / 2;
+        int style = (int) config.number("crosshair.style", 0.0D);
         int size = (int) config.number("crosshair.size", 7.0D);
         int gap = (int) config.number("crosshair.gap", 3.0D);
         int thick = (int) config.number("crosshair.thick", 1.0D);
         int color = config.color("crosshair.color", 0xFFFFFFFF);
+        switch (style) {
+            case 1:
+                dot(cx, cy, thick, color);
+                break;
+            case 2:
+                diagonal(cx, cy, size + gap, thick, color);
+                break;
+            case 3:
+                square(cx, cy, size + gap, thick, color);
+                break;
+            case 4:
+                circle(cx, cy, size + gap, thick, color);
+                break;
+            case 5:
+                tShape(cx, cy, size, gap, thick, color);
+                break;
+            default:
+                plus(cx, cy, size, gap, thick, color);
+                if (config.toggle("crosshair.dot", true)) dot(cx, cy, thick, color);
+                break;
+        }
+    }
+    private void plus(int cx, int cy, int size, int gap, int thick, int color) {
         Gui.drawRect(cx - gap - size, cy, cx - gap, cy + thick, color);
         Gui.drawRect(cx + gap, cy, cx + gap + size, cy + thick, color);
         Gui.drawRect(cx, cy - gap - size, cx + thick, cy - gap, color);
         Gui.drawRect(cx, cy + gap, cx + thick, cy + gap + size, color);
-        if (config.toggle("crosshair.dot", true)) {
-            Gui.drawRect(cx, cy, cx + 1, cy + 1, color);
+    }
+
+    private void tShape(int cx, int cy, int size, int gap, int thick, int color) {
+        Gui.drawRect(cx - gap - size, cy, cx - gap, cy + thick, color);
+        Gui.drawRect(cx + gap, cy, cx + gap + size, cy + thick, color);
+        Gui.drawRect(cx, cy - gap - size, cx + thick, cy - gap, color);
+    }
+
+    private void dot(int cx, int cy, int thick, int color) {
+        Gui.drawRect(cx, cy, cx + thick, cy + thick, color);
+    }
+
+    private void diagonal(int cx, int cy, int size, int thick, int color) {
+        for (int i = -size; i <= size; i++) {
+            Gui.drawRect(cx + i, cy + i, cx + i + thick, cy + i + thick, color);
+            Gui.drawRect(cx + i, cy - i, cx + i + thick, cy - i + thick, color);
+        }
+    }
+
+    private void square(int cx, int cy, int half, int thick, int color) {
+        Gui.drawRect(cx - half, cy - half, cx + half + thick, cy - half + thick, color);
+        Gui.drawRect(cx - half, cy + half, cx + half + thick, cy + half + thick, color);
+        Gui.drawRect(cx - half, cy - half, cx - half + thick, cy + half + thick, color);
+        Gui.drawRect(cx + half, cy - half, cx + half + thick, cy + half + thick, color);
+    }
+
+    private void circle(int cx, int cy, int radius, int thick, int color) {
+        for (int angle = 0; angle < 360; angle += 5) {
+            double radians = Math.toRadians(angle);
+            int px = cx + (int) Math.round(Math.cos(radians) * radius);
+            int py = cy + (int) Math.round(Math.sin(radians) * radius);
+            Gui.drawRect(px, py, px + thick, py + thick, color);
         }
     }
 }

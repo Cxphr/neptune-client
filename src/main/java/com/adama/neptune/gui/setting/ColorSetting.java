@@ -1,6 +1,7 @@
 package com.adama.neptune.gui.setting;
 
 import net.minecraft.client.Minecraft;
+import com.adama.neptune.gui.Theme;
 import net.minecraft.client.gui.Gui;
 
 import java.awt.Color;
@@ -26,7 +27,7 @@ public class ColorSetting extends Setting {
     @Override
     public void render(int x, int y, int width, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getMinecraft();
-        mc.fontRendererObj.drawStringWithShadow(label, x, y + 1, 0xFFC7D0DC);
+        mc.fontRendererObj.drawStringWithShadow(label, x, y + 1, Theme.TEXT);
         int barY = y + 12;
         for (int i = 0; i < width; i++) {
             float hue = i / (float) width;

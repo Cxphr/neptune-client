@@ -35,6 +35,7 @@ public class NeptuneConfig {
     public boolean showZoomHud = false;
 
     public int guiKey = Keyboard.KEY_RSHIFT;
+    public int guiMode = 0;
 
     public boolean hitboxesEnabled = true;
     public int hitboxColor = 0xFFFF4040;

@@ -17,7 +17,7 @@ public class HealthBarModule extends HudModule {
         super(config);
         this.settings = Arrays.asList(
                 new BoolSetting("Enabled", this::isEnabled, this::setEnabled),
-                new BoolSetting("Show numbers", () -> config.toggle("healthbar.numbers", true),
+                new BoolSetting("Show numbers", () -> config.toggle("healthbar.numbers", false),
                         value -> config.setToggle("healthbar.numbers", value)),
                 new BoolSetting("Absorption", () -> config.toggle("healthbar.absorption", true),
                         value -> config.setToggle("healthbar.absorption", value)),
@@ -87,7 +87,7 @@ public class HealthBarModule extends HudModule {
             Gui.drawRect(x, y + height - fill - absorb, x + width, y + height - fill, 0xFFFFC94D);
         }
 
-        if (config.toggle("healthbar.numbers", true)) {
+        if (config.toggle("healthbar.numbers", false)) {
             String text = (int) Math.ceil(health) + "/" + (int) max + (absorption > 0.0F ? " +" + (int) Math.ceil(absorption) : "");
             mc.fontRendererObj.drawStringWithShadow(text, x + width + 3, y + height / 2 - 4, 0xFFE6EDF3);
         }

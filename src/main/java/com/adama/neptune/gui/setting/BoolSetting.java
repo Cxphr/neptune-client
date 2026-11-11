@@ -1,6 +1,7 @@
 package com.adama.neptune.gui.setting;
 
 import net.minecraft.client.Minecraft;
+import com.adama.neptune.gui.Theme;
 import net.minecraft.client.gui.Gui;
 
 import java.util.function.BooleanSupplier;
@@ -24,16 +25,16 @@ public class BoolSetting extends Setting {
     @Override
     public void render(int x, int y, int width, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getMinecraft();
-        mc.fontRendererObj.drawStringWithShadow(label, x, y + 5, 0xFFC7D0DC);
+        mc.fontRendererObj.drawStringWithShadow(label, x, y + 5, Theme.TEXT);
         boolean on = getter.getAsBoolean();
         int sw = 22;
         int sh = 10;
         int sx = x + width - sw;
         int sy = y + 4;
-        Gui.drawRect(sx, sy, sx + sw, sy + sh, on ? 0xFF2E6BD6 : 0xFF2A3342);
+        Gui.drawRect(sx, sy, sx + sw, sy + sh, on ? Theme.ACTIVE : Theme.SECONDARY);
         int knobLeft = on ? sx + sw / 2 : sx + 1;
         int knobRight = on ? sx + sw - 1 : sx + sw / 2;
-        Gui.drawRect(knobLeft, sy + 1, knobRight, sy + sh - 1, on ? 0xFFCFE3FF : 0xFF4A5568);
+        Gui.drawRect(knobLeft, sy + 1, knobRight, sy + sh - 1, on ? Theme.TEXT : Theme.MUTED);
     }
 
     @Override

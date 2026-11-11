@@ -1,6 +1,7 @@
 package com.adama.neptune.gui.setting;
 
 import net.minecraft.client.Minecraft;
+import com.adama.neptune.gui.Theme;
 import net.minecraft.client.gui.Gui;
 
 import java.util.function.DoubleConsumer;
@@ -52,15 +53,15 @@ public class SliderSetting extends Setting {
     @Override
     public void render(int x, int y, int width, int mouseX, int mouseY) {
         Minecraft mc = Minecraft.getMinecraft();
-        mc.fontRendererObj.drawStringWithShadow(label, x, y + 2, 0xFFC7D0DC);
+        mc.fontRendererObj.drawStringWithShadow(label, x, y + 2, Theme.TEXT);
         String val = formatted();
-        mc.fontRendererObj.drawStringWithShadow(val, x + width - mc.fontRendererObj.getStringWidth(val), y + 2, 0xFF8FB6F0);
+        mc.fontRendererObj.drawStringWithShadow(val, x + width - mc.fontRendererObj.getStringWidth(val), y + 2, Theme.MUTED);
         int trackY = y + 15;
-        Gui.drawRect(x, trackY, x + width, trackY + 4, 0xFF232B36);
+        Gui.drawRect(x, trackY, x + width, trackY + 4, Theme.SECONDARY);
         double pct = (value() - min) / (max - min);
         int fill = (int) Math.round(width * pct);
-        Gui.drawRect(x, trackY, x + fill, trackY + 4, 0xFF2E6BD6);
-        Gui.drawRect(x + fill - 2, trackY - 2, x + fill + 2, trackY + 6, 0xFFCFE3FF);
+        Gui.drawRect(x, trackY, x + fill, trackY + 4, 0xFF404040);
+        Gui.drawRect(x + fill - 2, trackY - 2, x + fill + 2, trackY + 6, Theme.TEXT);
     }
 
     @Override

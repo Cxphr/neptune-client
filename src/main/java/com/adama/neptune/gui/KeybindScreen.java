@@ -76,6 +76,10 @@ public class KeybindScreen extends GuiScreen {
     }
 
     public KeybindScreen(NeptuneConfig config, ModuleManager manager) {
+        this(config, manager, null);
+    }
+
+    public KeybindScreen(NeptuneConfig config, ModuleManager manager, String initialAction) {
         this.config = config;
         this.manager = manager;
         actions.add(new Action("gui", "Open GUI"));
@@ -83,6 +87,14 @@ public class KeybindScreen extends GuiScreen {
         actions.add(new Action("zoom", "Zoom"));
         for (BKModule module : manager.modules()) {
             actions.add(new Action("toggle." + module.id(), module.name()));
+        }
+        if (initialAction != null) {
+            for (int i = 0; i < actions.size(); i++) {
+                if (actions.get(i).id.equals(initialAction)) {
+                    selected = i;
+                    break;
+                }
+            }
         }
     }
 
@@ -99,8 +111,8 @@ public class KeybindScreen extends GuiScreen {
         guiTop = (height - panelH) / 2;
         drawRect(0, 0, width, height, 0x90000000);
         drawRect(guiLeft - 2, guiTop - 2, guiLeft + panelW + 2, guiTop + panelH + 2, 0x60000000);
-        drawRect(guiLeft, guiTop, guiLeft + panelW, guiTop + panelH, 0xFF0E131C);
-        drawGradientRect(guiLeft, guiTop, guiLeft + panelW, guiTop + 30, 0xFF1B2A55, 0xFF231636);
+        drawRect(guiLeft, guiTop, guiLeft + panelW, guiTop + panelH, 0xFF101010);
+        drawGradientRect(guiLeft, guiTop, guiLeft + panelW, guiTop + 30, 0xFF181818, 0xFF080808);
         drawGradientRect(guiLeft, guiTop + 30, guiLeft + panelW, guiTop + 31, ACCENT_A, ACCENT_B);
         mc.fontRendererObj.drawStringWithShadow("KEYBINDS", guiLeft + 12, guiTop + 10, 0xFFE6EDF3);
         mc.fontRendererObj.drawStringWithShadow("click an action, then a key", guiLeft + 100, guiTop + 10, 0xFF8A94A6);
@@ -109,18 +121,18 @@ public class KeybindScreen extends GuiScreen {
         int listY = guiTop + 40;
         int listW = 150;
         int listH = panelH - 80;
-        drawRect(listX, listY, listX + listW, listY + listH, 0xFF10161F);
+        drawRect(listX, listY, listX + listW, listY + listH, 0xFF0C0C0C);
         int y = listY + 4 - scroll;
         for (int i = 0; i < actions.size(); i++) {
             Action action = actions.get(i);
             if (y + 16 >= listY && y <= listY + listH) {
                 boolean sel = i == selected;
                 boolean hover = inside(mouseX, mouseY, listX + 2, y, listW - 4, 16);
-                if (sel) drawGradientRect(listX + 2, y, listX + listW - 2, y + 16, 0x553B82F6, 0x558B5CF6);
+                if (sel) drawGradientRect(listX + 2, y, listX + listW - 2, y + 16, 0x33FFFFFF, 0x22FFFFFF);
                 else if (hover) drawRect(listX + 2, y, listX + listW - 2, y + 16, 0x221E2A3A);
                 mc.fontRendererObj.drawStringWithShadow(action.label, listX + 8, y + 4, sel ? 0xFFE6EDF3 : 0xFFB6C1D2);
                 String key = keyName(manager.bindingCode(action.id));
-                mc.fontRendererObj.drawStringWithShadow(key, listX + listW - 8 - mc.fontRendererObj.getStringWidth(key), y + 4, sel ? 0xFF9DBBFF : 0xFF6F7B8C);
+                mc.fontRendererObj.drawStringWithShadow(key, listX + listW - 8 - mc.fontRendererObj.getStringWidth(key), y + 4, sel ? 0xFFDDDDDD : 0xFF808080);
             }
             y += 18;
         }
