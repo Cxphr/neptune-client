@@ -4,13 +4,13 @@ import com.adama.neptune.config.NeptuneConfig;
 import com.adama.neptune.gui.setting.BoolSetting;
 import com.adama.neptune.gui.setting.Setting;
 import com.adama.neptune.gui.setting.SliderSetting;
+import com.adama.neptune.util.KeyUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.MouseEvent;
-import org.lwjgl.input.Keyboard;
 
 import java.util.Arrays;
 import java.util.List;
@@ -88,7 +88,7 @@ public class SmoothZoomModule extends BKModule {
     }
 
     private boolean keyDown() {
-        return Keyboard.isKeyDown(config.zoomKey);
+        return KeyUtil.isDown(config.zoomKey);
     }
 
     @Override

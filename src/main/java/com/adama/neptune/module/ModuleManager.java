@@ -3,11 +3,11 @@ package com.adama.neptune.module;
 import com.adama.neptune.config.NeptuneConfig;
 import com.adama.neptune.gui.ClickGui;
 import com.adama.neptune.input.CapturingMouseHelper;
+import com.adama.neptune.util.KeyUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -149,11 +149,29 @@ public class ModuleManager {
     }
 
     private static boolean isDown(int code) {
-        if (code == 0) return false;
-        if (code >= -100 && code <= -98) {
-            return Mouse.isButtonDown(-100 - code);
+        return KeyUtil.isDown(code);
+    }
+
+    private void syncKeybinds() {
+        boolean changed = false;
+        if (guiKey != null && config.guiKey != guiKey.getKeyCode()) {
+            config.guiKey = guiKey.getKeyCode();
+            changed = true;
         }
-        return Keyboard.isKeyDown(code);
+        if (freelookKey != null && config.freelookKey != freelookKey.getKeyCode()) {
+            config.freelookKey = freelookKey.getKeyCode();
+            changed = true;
+        }
+        if (zoomKey != null && config.zoomKey != zoomKey.getKeyCode()) {
+            config.zoomKey = zoomKey.getKeyCode();
+            changed = true;
+        }
+        if (hitboxKey != null && config.hitboxToggleKey != hitboxKey.getKeyCode()) {
+            config.hitboxToggleKey = hitboxKey.getKeyCode();
+            config.setKey("toggle.hitboxes", hitboxKey.getKeyCode());
+            changed = true;
+        }
+        if (changed) config.markDirty();
     }
 
     private void ensureMouseHelper() {
@@ -205,6 +223,7 @@ public class ModuleManager {
         for (BKModule module : modules) {
             module.onClientTick();
         }
+        syncKeybinds();
     }
 
     public void onRenderTick(float dt) {

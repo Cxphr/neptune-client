@@ -175,10 +175,8 @@ class PingHud extends BasicHudModule {
     @Override
     protected List<String> lines() {
         if (mc.getNetHandler() == null || mc.thePlayer == null) return Collections.singletonList("Ping -");
-        int ping = 0;
-        if (mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID()) != null) {
-            ping = mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID()).getResponseTime();
-        }
+        net.minecraft.client.network.NetworkPlayerInfo info = mc.getNetHandler().getPlayerInfo(mc.thePlayer.getUniqueID());
+        int ping = info == null ? 0 : info.getResponseTime();
         return Collections.singletonList("Ping " + ping + "ms");
     }
 }
@@ -367,7 +365,8 @@ class PotionHud extends HudModule {
             net.minecraft.potion.Potion potion = effect.getPotionID() >= 0 && effect.getPotionID() < net.minecraft.potion.Potion.potionTypes.length ? net.minecraft.potion.Potion.potionTypes[effect.getPotionID()] : null;
             if (potion == null) continue;
             int seconds = effect.getDuration() / 20;
-            String text = potion.getName() + (effect.getAmplifier() > 0 ? " " + (effect.getAmplifier() + 1) : "")
+            String potionName = potion.getName() == null ? "Potion" : potion.getName();
+            String text = potionName + (effect.getAmplifier() > 0 ? " " + (effect.getAmplifier() + 1) : "")
                     + " " + String.format("%d:%02d", seconds / 60, seconds % 60);
             mc.fontRendererObj.drawStringWithShadow(text, x, y, 0xFFDFE8F5);
             y += 10;
@@ -382,7 +381,8 @@ class PotionHud extends HudModule {
         for (net.minecraft.potion.PotionEffect effect : mc.thePlayer.getActivePotionEffects()) {
             net.minecraft.potion.Potion potion = effect.getPotionID() >= 0 && effect.getPotionID() < net.minecraft.potion.Potion.potionTypes.length ? net.minecraft.potion.Potion.potionTypes[effect.getPotionID()] : null;
             if (potion == null) continue;
-            width = Math.max(width, mc.fontRendererObj.getStringWidth(potion.getName()));
+            String potionName = potion.getName() == null ? "Potion" : potion.getName();
+            width = Math.max(width, mc.fontRendererObj.getStringWidth(potionName));
         }
         return width;
     }

@@ -69,6 +69,7 @@ class AutoGGModule extends BKModule {
 
     @Override
     public void onChat(ClientChatReceivedEvent event) {
+        if (event.type != 0 && event.type != 1) return;
         if (!isEnabled() || pending) return;
         long now = System.currentTimeMillis();
         if (now < cooldownUntil) return;
@@ -141,6 +142,7 @@ class ChatTimestampsModule extends BKModule {
 
     @Override
     public void onChat(ClientChatReceivedEvent event) {
+        if (event.type != 0 && event.type != 1) return;
         if (!isEnabled()) return;
         String prefix = "[" + format.format(new Date()) + "] ";
         event.message = new ChatComponentText(prefix).appendSibling(event.message);

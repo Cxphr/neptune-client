@@ -13,6 +13,8 @@ import java.util.List;
 
 public class CoordsModule extends HudModule {
     private final List<Setting> settings;
+    private final List<String> cached = new ArrayList<>();
+    private long cachedAt;
 
     public CoordsModule(NeptuneConfig config) {
         super(config);
@@ -65,24 +67,30 @@ public class CoordsModule extends HudModule {
         return settings;
     }
 
-    private List<String> lines() {
+    private void refresh() {
         Minecraft mc = Minecraft.getMinecraft();
-        List<String> lines = new ArrayList<>();
-        if (mc.thePlayer == null) return lines;
-        lines.add(String.format("XYZ %d %d %d",
-                MathHelper.floor_double(mc.thePlayer.posX),
-                MathHelper.floor_double(mc.thePlayer.posY),
-                MathHelper.floor_double(mc.thePlayer.posZ)));
+        cached.clear();
+        if (mc.thePlayer == null) return;
+        cached.add("XYZ " + MathHelper.floor_double(mc.thePlayer.posX) + " "
+                + MathHelper.floor_double(mc.thePlayer.posY) + " "
+                + MathHelper.floor_double(mc.thePlayer.posZ));
         if (config.coordsShowChunk) {
-            lines.add("Chunk " + mc.thePlayer.chunkCoordX + " " + mc.thePlayer.chunkCoordZ);
+            cached.add("Chunk " + mc.thePlayer.chunkCoordX + " " + mc.thePlayer.chunkCoordZ);
         }
         String[] directions = {"south", "west", "north", "east"};
         int index = MathHelper.floor_double(mc.thePlayer.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
-        lines.add("Facing " + directions[index]);
+        cached.add("Facing " + directions[index]);
         if (config.coordsShowFps) {
-            lines.add("FPS " + Minecraft.getDebugFPS());
+            cached.add("FPS " + Minecraft.getDebugFPS());
         }
-        return lines;
+        cachedAt = Minecraft.getSystemTime();
+    }
+
+    private List<String> lines() {
+        if (cached.isEmpty() || Minecraft.getSystemTime() - cachedAt > 100L) {
+            refresh();
+        }
+        return cached;
     }
 
     @Override

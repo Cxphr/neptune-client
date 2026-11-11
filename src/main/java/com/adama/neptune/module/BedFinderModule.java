@@ -108,10 +108,20 @@ public class BedFinderModule extends HudModule {
             return;
         }
         beds.sort(Comparator.comparingDouble(pos -> distanceSq(pos, center)));
-        int shown = 0;
+        List<BlockPos> shownBeds = new ArrayList<>();
         for (BlockPos bed : beds) {
-            if (shown >= 4) break;
-            if (isSameBedListed(beds, bed, shown)) continue;
+            if (shownBeds.size() >= 4) break;
+            boolean duplicate = false;
+            for (BlockPos shownBed : shownBeds) {
+                if (Math.abs(shownBed.getX() - bed.getX()) <= 1
+                        && Math.abs(shownBed.getY() - bed.getY()) <= 1
+                        && Math.abs(shownBed.getZ() - bed.getZ()) <= 1) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) continue;
+            shownBeds.add(bed);
             int dx = bed.getX() - center.getX();
             int dz = bed.getZ() - center.getZ();
             double distance = Math.sqrt(dx * dx + dz * dz);
@@ -120,19 +130,7 @@ public class BedFinderModule extends HudModule {
                 line += "  " + surrounding(mc, bed);
             }
             cached.add(line);
-            shown++;
         }
-    }
-
-    private boolean isSameBedListed(List<BlockPos> beds, BlockPos bed, int shown) {
-        for (int i = 0; i < shown && i < beds.size(); i++) {
-            BlockPos other = beds.get(i);
-            if (Math.abs(other.getX() - bed.getX()) <= 1 && Math.abs(other.getY() - bed.getY()) <= 1
-                    && Math.abs(other.getZ() - bed.getZ()) <= 1) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private String surrounding(Minecraft mc, BlockPos bed) {
