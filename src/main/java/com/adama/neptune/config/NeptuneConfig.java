@@ -173,7 +173,14 @@ public class NeptuneConfig {
             }
         }
         if (cfg == null) cfg = new NeptuneConfig();
-        cfg.file = target;
+        if (cfg.toggles == null) cfg.toggles = new LinkedHashMap<>();
+        if (cfg.positionsX == null) cfg.positionsX = new LinkedHashMap<>();
+        if (cfg.positionsY == null) cfg.positionsY = new LinkedHashMap<>();
+        if (cfg.numbers == null) cfg.numbers = new LinkedHashMap<>();
+        if (cfg.colors == null) cfg.colors = new LinkedHashMap<>();
+        if (cfg.keybinds == null) cfg.keybinds = new LinkedHashMap<>();
+        if (cfg.strings == null) cfg.strings = new LinkedHashMap<>();
+        cfg.file = target.getAbsoluteFile();
         cfg.save();
         return cfg;
     }

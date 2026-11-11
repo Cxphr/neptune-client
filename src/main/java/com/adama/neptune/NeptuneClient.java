@@ -33,6 +33,8 @@ public class NeptuneClient {
         modules.registerKeybinds();
         ClientEvents handler = new ClientEvents(this);
         MinecraftForge.EVENT_BUS.register(handler);
-        FMLCommonHandler.instance().bus().register(handler);
+        if (FMLCommonHandler.instance().bus() != MinecraftForge.EVENT_BUS) {
+            FMLCommonHandler.instance().bus().register(handler);
+        }
     }
 }

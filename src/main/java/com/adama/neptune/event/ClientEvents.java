@@ -2,6 +2,7 @@ package com.adama.neptune.event;
 
 import com.adama.neptune.NeptuneClient;
 import com.adama.neptune.module.BKModule;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
@@ -89,11 +90,15 @@ public class ClientEvents {
 
     @SubscribeEvent
     public void onOverlayPre(RenderGameOverlayEvent.Pre event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.gameSettings != null && mc.gameSettings.hideGUI) return;
         for (BKModule module : mod.modules.modules()) module.onRenderOverlayPre(event);
     }
 
     @SubscribeEvent
     public void onOverlayPost(RenderGameOverlayEvent.Post event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.gameSettings != null && mc.gameSettings.hideGUI) return;
         if (event.type == RenderGameOverlayEvent.ElementType.TEXT) {
             mod.modules.renderHud();
         }

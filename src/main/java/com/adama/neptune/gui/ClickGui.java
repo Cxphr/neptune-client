@@ -14,8 +14,10 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ClickGui extends GuiScreen {
@@ -39,6 +41,7 @@ public class ClickGui extends GuiScreen {
     private final ModuleManager modules;
     private final List<String> categories = Arrays.asList("Movement", "Render", "HUD", "Utility");
     private final Set<String> expanded = new HashSet<>();
+    private final Map<BKModule, List<Setting>> settingsCache = new HashMap<>();
 
     private String category = "Movement";
     private int scroll;
@@ -83,12 +86,21 @@ public class ClickGui extends GuiScreen {
         return guiTop + PANEL_H - FOOTER_H - 6;
     }
 
+    private List<Setting> settingsOf(BKModule module) {
+        List<Setting> cached = settingsCache.get(module);
+        if (cached == null) {
+            cached = module.settings();
+            settingsCache.put(module, cached);
+        }
+        return cached;
+    }
+
     private int maxScroll() {
         int total = 0;
         for (BKModule module : modules.byCategory(category)) {
             total += ROW_H;
             if (expanded.contains(module.name())) {
-                for (Setting setting : module.settings()) total += setting.height();
+                for (Setting setting : settingsOf(module)) total += setting.height();
             }
         }
         return Math.max(0, total - (contentBottom() - contentTop()));
@@ -145,14 +157,14 @@ public class ClickGui extends GuiScreen {
             if (hover) drawRect(contentX(), y, contentX() + contentW(), y + 1, 0x332E6BD6);
             IconRenderer.draw(categoryIcon(module.category()), contentX() + 8, y + 6, 9, on ? 0xFFCFE3FF : MUTED);
             mc.fontRendererObj.drawStringWithShadow(module.name(), contentX() + 22, y + 7, on ? TEXT : MUTED);
-            if (!module.settings().isEmpty()) {
+            if (!settingsOf(module).isEmpty()) {
                 String chevron = expanded.contains(module.name()) ? "-" : "+";
                 int cx = contentX() + contentW() - 14;
                 mc.fontRendererObj.drawStringWithShadow(chevron, cx, y + 7, hover ? ACCENT_SOFT : MUTED);
             }
             y += ROW_H;
             if (expanded.contains(module.name())) {
-                for (Setting setting : module.settings()) {
+                for (Setting setting : settingsOf(module)) {
                     setting.render(contentX() + 8, y, contentW() - 8, mouseX, mouseY);
                     y += setting.height();
                 }
@@ -220,7 +232,7 @@ public class ClickGui extends GuiScreen {
             }
             y += ROW_H;
             if (expanded.contains(module.name())) {
-                for (Setting setting : module.settings()) {
+                for (Setting setting : settingsOf(module)) {
                     if (setting.mouseClicked(mouseX, mouseY, mouseButton, contentX() + 8, y, contentW() - 8)) {
                         active = setting;
                         activeX = contentX() + 8;

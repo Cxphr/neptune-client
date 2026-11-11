@@ -2,7 +2,7 @@
 {
   "modid": "neptune",
   "name": "Neptune Client",
-  "description": "Clean-room free look, smooth zoom and hitbox rendering.",
+  "description": "Neptune Client - clean-room HUD, render and movement modules for 1.8.9 Forge.",
   "version": "${version}",
   "mcversion": "1.8.9",
   "url": "",
