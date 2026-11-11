@@ -5,6 +5,7 @@ import com.adama.neptune.gui.setting.BoolSetting;
 import com.adama.neptune.gui.setting.ColorSetting;
 import com.adama.neptune.gui.setting.Setting;
 import com.adama.neptune.gui.setting.SliderSetting;
+import com.adama.neptune.util.GlUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
@@ -175,11 +176,14 @@ class BlockOutlineModule extends BKModule {
         float alpha = ((color >> 24) & 255) / 255.0F;
         if (alpha <= 0.0F) alpha = 1.0F;
 
+        boolean blendWas = GlUtil.get(GL11.GL_BLEND);
+        boolean lightingWas = GlUtil.get(GL11.GL_LIGHTING);
+        boolean textureWas = GlUtil.get(GL11.GL_TEXTURE_2D);
         GlStateManager.pushMatrix();
-        GlStateManager.enableBlend();
+        GlUtil.set(GL11.GL_BLEND, true);
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.disableTexture2D();
-        GlStateManager.disableLighting();
+        GlUtil.set(GL11.GL_TEXTURE_2D, false);
+        GlUtil.set(GL11.GL_LIGHTING, false);
         GL11.glLineWidth((float) config.number("blockoutline.width", 1.5D));
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer renderer = tessellator.getWorldRenderer();
@@ -187,9 +191,9 @@ class BlockOutlineModule extends BKModule {
         line(renderer, box, viewerX, viewerY, viewerZ, red, green, blue, alpha);
         tessellator.draw();
         GL11.glLineWidth(1.0F);
-        GlStateManager.enableLighting();
-        GlStateManager.enableTexture2D();
-        GlStateManager.disableBlend();
+        GlUtil.set(GL11.GL_LIGHTING, lightingWas);
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWas);
+        GlUtil.set(GL11.GL_BLEND, blendWas);
         GlStateManager.popMatrix();
     }
 
@@ -287,11 +291,14 @@ class ChunkBordersModule extends BKModule {
         double height = config.number("chunkborders.height", 256.0D);
         double baseY = 0.0D - viewerY;
 
+        boolean blendWas = GlUtil.get(GL11.GL_BLEND);
+        boolean lightingWas = GlUtil.get(GL11.GL_LIGHTING);
+        boolean textureWas = GlUtil.get(GL11.GL_TEXTURE_2D);
         GlStateManager.pushMatrix();
-        GlStateManager.enableBlend();
+        GlUtil.set(GL11.GL_BLEND, true);
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.disableTexture2D();
-        GlStateManager.disableLighting();
+        GlUtil.set(GL11.GL_TEXTURE_2D, false);
+        GlUtil.set(GL11.GL_LIGHTING, false);
         GL11.glLineWidth(1.0F);
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer renderer = tessellator.getWorldRenderer();
@@ -309,9 +316,9 @@ class ChunkBordersModule extends BKModule {
         renderer.pos(x1, baseY, z2).color(red, green, blue, alpha).endVertex();
         renderer.pos(x1, baseY + height, z2).color(red, green, blue, alpha).endVertex();
         tessellator.draw();
-        GlStateManager.enableLighting();
-        GlStateManager.enableTexture2D();
-        GlStateManager.disableBlend();
+        GlUtil.set(GL11.GL_LIGHTING, lightingWas);
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWas);
+        GlUtil.set(GL11.GL_BLEND, blendWas);
         GlStateManager.popMatrix();
     }
 }

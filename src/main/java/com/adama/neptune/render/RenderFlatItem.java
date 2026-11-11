@@ -1,6 +1,7 @@
 package com.adama.neptune.render;
 
 import com.adama.neptune.config.NeptuneConfig;
+import com.adama.neptune.util.GlUtil;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -15,6 +16,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import org.lwjgl.opengl.GL11;
 
 public class RenderFlatItem extends RenderEntityItem {
     private final NeptuneConfig config;
@@ -37,13 +39,15 @@ public class RenderFlatItem extends RenderEntityItem {
 
         float angle = (entity.getAge() + partialTicks) * config.itemPhysicsRotation * 3.0F;
 
+        boolean lightingWas = GlUtil.get(GL11.GL_LIGHTING);
+        boolean blendWas = GlUtil.get(GL11.GL_BLEND);
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y + 0.12D, z);
         GlStateManager.rotate(90.0F, 1.0F, 0.0F, 0.0F);
         GlStateManager.rotate(angle, 0.0F, 0.0F, 1.0F);
         GlStateManager.scale(0.5F, 0.5F, 0.5F);
-        GlStateManager.disableLighting();
-        GlStateManager.enableBlend();
+        GlUtil.set(GL11.GL_LIGHTING, false);
+        GlUtil.set(GL11.GL_BLEND, true);
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.enableRescaleNormal();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -58,8 +62,8 @@ public class RenderFlatItem extends RenderEntityItem {
         tessellator.draw();
 
         GlStateManager.disableRescaleNormal();
-        GlStateManager.disableBlend();
-        GlStateManager.enableLighting();
+        GlUtil.set(GL11.GL_BLEND, blendWas);
+        GlUtil.set(GL11.GL_LIGHTING, lightingWas);
         GlStateManager.popMatrix();
     }
 }

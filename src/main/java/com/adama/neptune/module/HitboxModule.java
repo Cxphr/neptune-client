@@ -5,6 +5,7 @@ import com.adama.neptune.gui.setting.BoolSetting;
 import com.adama.neptune.gui.setting.ColorSetting;
 import com.adama.neptune.gui.setting.Setting;
 import com.adama.neptune.gui.setting.SliderSetting;
+import com.adama.neptune.util.GlUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -122,7 +123,10 @@ public class HitboxModule extends BKModule {
         double viewerZ = mc.getRenderManager().viewerPosZ;
         double rangeSq = config.hitboxRange * config.hitboxRange;
 
-        boolean depthWasEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST);
+        boolean depthWasEnabled = GlUtil.get(GL11.GL_DEPTH_TEST);
+        boolean blendWasEnabled = GlUtil.get(GL11.GL_BLEND);
+        boolean lightingWasEnabled = GlUtil.get(GL11.GL_LIGHTING);
+        boolean textureWasEnabled = GlUtil.get(GL11.GL_TEXTURE_2D);
         int previousDepthFunc = GL11.glGetInteger(GL11.GL_DEPTH_FUNC);
 
         GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -188,17 +192,12 @@ public class HitboxModule extends BKModule {
 
         GL11.glLineWidth(1.0F);
         GlStateManager.depthMask(true);
-        GlStateManager.enableLighting();
-        GlStateManager.enableTexture2D();
-        GlStateManager.disableBlend();
+        GlUtil.set(GL11.GL_BLEND, blendWasEnabled);
+        GlUtil.set(GL11.GL_LIGHTING, lightingWasEnabled);
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWasEnabled);
         GL11.glDepthFunc(previousDepthFunc);
         GlStateManager.depthFunc(previousDepthFunc);
-        if (!depthWasEnabled) {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GlStateManager.disableDepth();
-        } else {
-            GlStateManager.enableDepth();
-        }
+        GlUtil.set(GL11.GL_DEPTH_TEST, depthWasEnabled);
     }
 
     private boolean shouldRender(Minecraft mc, EntityPlayer player, double rangeSq) {

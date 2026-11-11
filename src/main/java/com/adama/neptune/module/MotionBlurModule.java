@@ -5,6 +5,7 @@ import com.adama.neptune.gui.setting.BoolSetting;
 import com.adama.neptune.gui.setting.Setting;
 import com.adama.neptune.gui.setting.SliderSetting;
 import com.adama.neptune.util.Ease;
+import com.adama.neptune.util.GlUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -134,7 +135,7 @@ public class MotionBlurModule extends BKModule {
 
     @Override
     public void onRenderOverlayPre(RenderGameOverlayEvent.Pre event) {
-        if (!config.motionBlurEnabled || blur <= 0.01F) return;
+        if (!config.motionBlurEnabled) return;
         if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.gameSettings.hideGUI) return;
@@ -176,12 +177,14 @@ public class MotionBlurModule extends BKModule {
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         GlStateManager.pushMatrix();
         GlStateManager.loadIdentity();
-        GlStateManager.disableDepth();
+        boolean depthWas = GlUtil.get(GL11.GL_DEPTH_TEST);
+        boolean blendWas = GlUtil.get(GL11.GL_BLEND);
+        boolean textureWas = GlUtil.get(GL11.GL_TEXTURE_2D);
+        GlUtil.set(GL11.GL_DEPTH_TEST, false);
         GlStateManager.depthMask(false);
-        GlStateManager.disableLighting();
-        GlStateManager.enableBlend();
+        GlUtil.set(GL11.GL_BLEND, true);
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.enableTexture2D();
+        GlUtil.set(GL11.GL_TEXTURE_2D, true);
         GlStateManager.color(1.0F, 1.0F, 1.0F, alpha);
         GlStateManager.bindTexture(textureId);
 
@@ -199,8 +202,9 @@ public class MotionBlurModule extends BKModule {
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         GlStateManager.popMatrix();
         GlStateManager.depthMask(true);
-        GlStateManager.enableDepth();
-        GlStateManager.disableBlend();
+        GlUtil.set(GL11.GL_DEPTH_TEST, depthWas);
+        GlUtil.set(GL11.GL_BLEND, blendWas);
+        GlUtil.set(GL11.GL_TEXTURE_2D, textureWas);
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
     }
