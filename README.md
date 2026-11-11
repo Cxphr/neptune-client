@@ -41,8 +41,13 @@ Neptune is original code. It does **not** contain Lunar Client code, assets, or 
 - 🕰️ **Chat Timestamps**
 
 ### 🖥️ Client
-- 🎛️ Click GUI with icons and a blue→purple accent (`RightShift`)
-- ⌨️ On-screen keybind editor: **65%**, **TKL**, **ThinkPad**, **100%** layouts + mouse buttons
+- ⌨️ **Ctrl+R** opens the GUI (RShift still works)
+- 🗂️ Single page with collapsible **category bars** (cheat-client style) — no separate pages
+- 🎨 **Appearance** bar: module background, border, text, muted and accent colors
+- 🖼️ Space background image on the home screen and behind the GUI
+- 🔘 Card mode and compact vertical mode, switchable in the header
+- 🎹 Inline keybind capture on each module (click the key chip, press a key)
+- 🪟 Window Mode module: windowed / borderless / fullscreen
 - 💾 Debounced JSON config at `config/neptune.json`
 - 🧵 Shared easing utilities for smooth GUI/zoom animation
 
@@ -51,7 +56,7 @@ Neptune is original code. It does **not** contain Lunar Client code, assets, or 
 ## 📦 Install
 
 1. Install **Minecraft 1.8.9** with **Forge 11.15.1.2318**.
-2. Drop `neptune-client-1.1.0.jar` into `.minecraft/mods/`.
+2. Drop `neptune-client-1.2.0.jar` into `.minecraft/mods/`.
 3. Launch, press **RightShift** for the GUI.
 
 Default keys: `LAlt` freelook · `C` zoom · `H` hitbox toggle · `RightShift` GUI. Rebind everything in the GUI → **Keybinds**.
@@ -65,7 +70,7 @@ Requires **JDK 8** and **Gradle 4.10.3** (ForgeGradle 2.1, MCP `stable_20`).
 ```bash
 export JAVA_HOME=/path/to/jdk8
 gradle clean build
-# jar -> build/libs/neptune-client-1.1.0.jar
+# jar -> build/libs/neptune-client-1.2.0.jar
 ```
 
 > The incremental compiler can miss package-private classes after large edits; `clean build` is the reliable path.

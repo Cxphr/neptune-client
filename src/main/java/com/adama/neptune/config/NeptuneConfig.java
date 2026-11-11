@@ -34,7 +34,8 @@ public class NeptuneConfig {
     public boolean scaleSensitivity = true;
     public boolean showZoomHud = false;
 
-    public int guiKey = Keyboard.KEY_RSHIFT;
+    public int guiKey = Keyboard.KEY_R;
+    public boolean guiCtrl = true;
     public int guiMode = 0;
 
     public boolean hitboxesEnabled = true;

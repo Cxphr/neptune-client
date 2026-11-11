@@ -10,7 +10,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import org.lwjgl.opengl.GL11;
 
@@ -62,7 +63,7 @@ public class EnemyHealthModule extends BKModule {
 
     @Override
     public boolean isEnabled() {
-        return config.toggle("enemyhealth.on", false);
+        return config.toggle("enemyhealth.on", true);
     }
 
     @Override
@@ -104,22 +105,24 @@ public class EnemyHealthModule extends BKModule {
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer renderer = tessellator.getWorldRenderer();
 
-        for (EntityPlayer player : mc.theWorld.playerEntities) {
-            if (player == mc.thePlayer) continue;
-            if (player.getDistanceSqToEntity(mc.thePlayer) > rangeSq) continue;
-            double interpX = player.lastTickPosX + (player.posX - player.lastTickPosX) * event.partialTicks;
-            double interpY = player.lastTickPosY + (player.posY - player.lastTickPosY) * event.partialTicks;
-            double interpZ = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.partialTicks;
+        for (Entity entity : mc.theWorld.loadedEntityList) {
+            if (!(entity instanceof EntityLivingBase)) continue;
+            EntityLivingBase living = (EntityLivingBase) entity;
+            if (living == mc.thePlayer || !living.isEntityAlive()) continue;
+            if (living.getDistanceSqToEntity(mc.thePlayer) > rangeSq) continue;
+            double interpX = living.lastTickPosX + (living.posX - living.lastTickPosX) * event.partialTicks;
+            double interpY = living.lastTickPosY + (living.posY - living.lastTickPosY) * event.partialTicks;
+            double interpZ = living.lastTickPosZ + (living.posZ - living.lastTickPosZ) * event.partialTicks;
 
             GlStateManager.pushMatrix();
-            GlStateManager.translate(interpX - viewerX, interpY + player.height + 0.45D - viewerY, interpZ - viewerZ);
+            GlStateManager.translate(interpX - viewerX, interpY + living.height + 0.45D - viewerY, interpZ - viewerZ);
             GlStateManager.rotate(-mc.getRenderManager().playerViewY, 0.0F, 1.0F, 0.0F);
             GlStateManager.rotate(mc.getRenderManager().playerViewX, 1.0F, 0.0F, 0.0F);
             GlStateManager.scale(-0.025F, -0.025F, 0.025F);
 
             renderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-            float max = player.getMaxHealth();
-            float health = Math.min(player.getHealth(), max);
+            float max = living.getMaxHealth();
+            float health = Math.min(living.getHealth(), max);
             float ratio = max <= 0.0F ? 0.0F : health / max;
             float left = -width / 2.0F;
             float top = -height;
@@ -127,7 +130,7 @@ public class EnemyHealthModule extends BKModule {
             int fill = Math.round(height * ratio);
             quad(renderer, left, 0.0F - fill, left + width, 0.0F, healthColor(ratio));
             if (absorption) {
-                float absorb = player.getAbsorptionAmount();
+                float absorb = living.getAbsorptionAmount();
                 int absorbPixels = Math.min(height - fill, Math.round(height * (absorb / max)));
                 if (absorbPixels > 0) {
                     quad(renderer, left, -fill - absorbPixels, left + width, -fill, 0xFFFFC94D);

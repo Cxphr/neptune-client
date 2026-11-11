@@ -1,6 +1,6 @@
-# VERIFY — Neptune Client 1.1.0
+# VERIFY — Neptune Client 1.2.0
 
-Built: `neptune-client-1.1.0.jar` (copied to `~/Desktop/NeptuneClient-1.1.0.jar`).
+Built: `neptune-client-1.2.0.jar` (copied to `~/Desktop/NeptuneClient-1.2.0.jar`).
 Build: ForgeGradle 2.1 + Gradle 4.10.3 + Temurin 8u512, Minecraft
 1.8.9-11.15.1.2318, MCP stable_20. Compiles and assembles clean.
 

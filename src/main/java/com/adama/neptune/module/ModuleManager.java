@@ -82,6 +82,7 @@ public class ModuleManager {
 
         modules.add(new AutoGGModule(config));
         modules.add(new ChatTimestampsModule(config));
+        modules.add(new WindowModule(config));
 
         fullbright.sync();
     }
@@ -212,7 +213,10 @@ public class ModuleManager {
             zoom.resetZoom();
         }
 
-        boolean gui = isDown(config.guiKey);
+        boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+        boolean gui = (config.guiCtrl ? (ctrl && isDown(config.guiKey)) : isDown(config.guiKey))
+                || (ctrl && Keyboard.isKeyDown(Keyboard.KEY_R))
+                || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
         if (gui && !guiDown) {
             if (mc.currentScreen == null || mc.currentScreen instanceof GuiMainMenu) {
                 mc.displayGuiScreen(new ClickGui(config, this));

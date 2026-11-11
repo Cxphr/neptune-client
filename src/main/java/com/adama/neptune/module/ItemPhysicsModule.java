@@ -26,12 +26,9 @@ public class ItemPhysicsModule extends BKModule {
                     config.itemPhysicsEnabled = value;
                     config.markDirty();
                 }),
-                new SliderSetting("Rotation speed", 0.1D, 4.0D, 0.1D, 1,
-                        () -> config.itemPhysicsRotation,
-                        value -> {
-                            config.itemPhysicsRotation = (float) value;
-                            config.markDirty();
-                        })
+                new SliderSetting("Scale", 0.2D, 1.2D, 0.05D, 2,
+                        () -> config.number("itemphysics.scale", 0.5D),
+                        value -> config.setNumber("itemphysics.scale", value))
         );
     }
 

@@ -2,6 +2,12 @@ package com.adama.neptune.event;
 
 import com.adama.neptune.NeptuneClient;
 import com.adama.neptune.module.BKModule;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.GuiScreenEvent;
+import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
@@ -15,6 +21,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class ClientEvents {
+    private static final ResourceLocation NEPTUNE_BACKGROUND = new ResourceLocation("neptune:textures/gui/background.png");
+
     private final NeptuneClient mod;
     private long lastNanos;
 
@@ -81,6 +89,22 @@ public class ClientEvents {
     @SubscribeEvent
     public void onAttack(AttackEntityEvent event) {
         for (BKModule module : mod.modules.modules()) module.onAttack(event);
+    }
+
+    @SubscribeEvent
+    public void onBackground(GuiScreenEvent.BackgroundDrawnEvent event) {
+        if (!(event.gui instanceof GuiMainMenu)) return;
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        int w = event.gui.width;
+        int h = event.gui.height;
+        mc.getTextureManager().bindTexture(NEPTUNE_BACKGROUND);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GlStateManager.enableBlend();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        Gui.drawModalRectWithCustomSizedTexture(0, 0, 0.0F, 0.0F, w, h, w, h);
+        Gui.drawRect(0, 0, w, h, 0x66000000);
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @SubscribeEvent

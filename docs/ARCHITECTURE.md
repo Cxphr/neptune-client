@@ -136,12 +136,14 @@ File location: `config/neptune.json`.
 
 ## 🖥️ GUI
 
-`ClickGui` (RightShift) is rendered with vanilla `GuiScreen` drawing helpers:
+`ClickGui` (Ctrl+R, RShift fallback) is rendered with vanilla `GuiScreen` drawing helpers:
 
-- category rail with `IconRenderer` icons,
-- module rows with enable state and expandable settings,
-- gradient sliders, hue color pickers, keybind chips,
-- **Keybinds** button opens `KeybindScreen`.
+- one page with collapsible category **bars** (Movement / Render / HUD / Utility),
+- card mode and compact vertical mode, toggled in the header,
+- per-module background/border/text/accent colours from the **Appearance** bar,
+- inline keybind capture: click the key chip, press a key or mouse button,
+- **Keybinds** button opens the full `KeybindScreen` keyboard,
+- space background image (`assets/neptune/textures/gui/background.png`) behind the GUI and on the main menu.
 
 `KeybindScreen` draws four physical layouts (`65`, `TKL`, `ThinkPad`, `100`) and mouse buttons. Selecting an action then clicking a key writes straight to `NeptuneConfig` and updates the registered `KeyBinding` code.
 
@@ -160,7 +162,7 @@ File location: `config/neptune.json`.
 - Skips when a screen is open or a world is absent; texture is reallocated on resize.
 
 ### Item Physics
-- Replaces the `EntityItem` renderer in `RenderManager.entityRenderMap` with `RenderFlatItem`, which draws the item's particle sprite as a flat, spinning quad.
+- Replaces the `EntityItem` renderer in `RenderManager.entityRenderMap` with `RenderFlatItem`, which renders the real 3D item model with `TransformType.GROUND` (no spin, no billboard).
 - Restores the original renderer when disabled.
 
 ### GL Debug
